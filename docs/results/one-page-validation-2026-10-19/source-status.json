@@ -1,0 +1,54 @@
+{
+  "recorded_at": "2026-10-19T03:19:08.236407+00:00",
+  "actual_kbs_html_count": 0,
+  "actual_broadcast_count": 0,
+  "actual_place_count": 0,
+  "actual_html_parser_validation": "not_run",
+  "recent_five_validation": "not_run_one_page_not_validated",
+  "candidates": [
+    {
+      "url": "https://iaudience.kbs.co.kr/broadcast/",
+      "content_requested": false,
+      "policy_requested": false,
+      "reason": "CONNECT403 confirmed at host; no repeated request",
+      "robots": "unverified",
+      "terms": "unverified",
+      "reuse_permission": "unverified",
+      "dom": "not_observed",
+      "javascript_rendering": "unverified"
+    },
+    {
+      "url": "https://iaudience.kbs.co.kr/broadcast/11344",
+      "content_requested": false,
+      "policy_requested": false,
+      "reason": "CONNECT403 confirmed at host; no repeated request",
+      "robots": "unverified",
+      "terms": "unverified",
+      "reuse_permission": "unverified",
+      "dom": "not_observed",
+      "javascript_rendering": "unverified"
+    },
+    {
+      "url": "https://iaudience.kbs.co.kr/broadcast/11279",
+      "content_requested": false,
+      "policy_requested": false,
+      "reason": "CONNECT403 confirmed at host; no repeated request",
+      "robots": "unverified",
+      "terms": "unverified",
+      "reuse_permission": "unverified",
+      "dom": "not_observed",
+      "javascript_rendering": "unverified"
+    },
+    {
+      "url": "https://iaudience.kbs.co.kr/broadcast/11234",
+      "content_requested": false,
+      "policy_requested": false,
+      "reason": "CONNECT403 confirmed at host; no repeated request",
+      "robots": "unverified",
+      "terms": "unverified",
+      "reuse_permission": "unverified",
+      "dom": "not_observed",
+      "javascript_rendering": "unverified"
+    }
+  ]
+}

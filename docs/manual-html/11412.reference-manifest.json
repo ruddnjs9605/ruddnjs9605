@@ -1,0 +1,56 @@
+{
+  "reference_kind": "user_provided_assertions_not_extracted_data",
+  "sources": [
+    {
+      "file": "11412.html",
+      "source_url": "https://iaudience.kbs.co.kr/broadcast/11412",
+      "encoding": "utf-8-sig",
+      "expected_records": [
+        {
+          "match": {
+            "name": "숭례분식"
+          },
+          "facts": {
+            "program_name": "생생정보 스페셜",
+            "name": "숭례분식",
+            "address": "서울 중구 남대문시장2길 5",
+            "corner_name": "할매~ 밥 됩니까?"
+          }
+        },
+        {
+          "match": {
+            "name": "금화횟집"
+          },
+          "facts": {
+            "program_name": "생생정보 스페셜",
+            "name": "금화횟집",
+            "address": "부산 강서구 신포길17번길 32",
+            "corner_name": "지금이 딱~ 제철!"
+          }
+        },
+        {
+          "match": {
+            "name": "강변상회"
+          },
+          "facts": {
+            "program_name": "생생정보 스페셜",
+            "name": "강변상회",
+            "address": "서울 동작구 노들로 674",
+            "corner_name": "한강 물줄기 따라 가을 나들이"
+          }
+        },
+        {
+          "match": {
+            "name": "풀내음 캠핑장"
+          },
+          "facts": {
+            "program_name": "생생정보 스페셜",
+            "name": "풀내음 캠핑장",
+            "address": "경기 화성시 봉담읍 도곡1길 20-21",
+            "corner_name": "독한 인생"
+          }
+        }
+      ]
+    }
+  ]
+}

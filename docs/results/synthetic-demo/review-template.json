@@ -1,0 +1,62 @@
+{
+  "reviewer": "",
+  "records": [
+    {
+      "id": "554be508b3be3f96eeb1",
+      "fields": {
+        "name": {
+          "expected_value": "가상식당 알파",
+          "evidence": "상호: 가상식당 알파",
+          "note": ""
+        },
+        "address": {
+          "expected_value": "테스트시 가상로 0",
+          "evidence": "주소: 테스트시 가상로 0",
+          "note": ""
+        },
+        "representative_menu": {
+          "expected_value": "테스트 메뉴",
+          "evidence": "대표 메뉴: 테스트 메뉴",
+          "note": ""
+        },
+        "broadcast_date": {
+          "expected_value": "2026-01-02",
+          "evidence": "방송일: 2026년 1월 2일",
+          "note": ""
+        },
+        "episode_number": {
+          "expected_value": "99999",
+          "evidence": "회차: 99999회",
+          "note": ""
+        }
+      },
+      "additional_sources": []
+    },
+    {
+      "id": "ec8f1882a52e5f8c944d",
+      "fields": {
+        "name": {
+          "expected_value": "가상식당 베타",
+          "evidence": "상호명: 가상식당 베타",
+          "note": ""
+        },
+        "address": {
+          "expected_value": "테스트시 실험로 0",
+          "evidence": "주소: 테스트시 실험로 0",
+          "note": ""
+        },
+        "broadcast_date": {
+          "expected_value": "2026-01-02",
+          "evidence": "방송일: 2026년 1월 2일",
+          "note": ""
+        },
+        "episode_number": {
+          "expected_value": "99999",
+          "evidence": "회차: 99999회",
+          "note": ""
+        }
+      },
+      "additional_sources": []
+    }
+  ]
+}

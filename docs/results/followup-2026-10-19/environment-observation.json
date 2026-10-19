@@ -1,0 +1,16 @@
+{
+  "observation_source": "read_environment_config_draft metadata (not live instance status)",
+  "draft_revision_at_inspection": 3,
+  "network_type": "restricted",
+  "custom_hosts_at_inspection": ["apis.kbs.co.kr", "pbbs.kbs.co.kr", "program.kbs.co.kr", "schedule.kbs.co.kr", "www.kbs.co.kr"],
+  "iaudience_present_at_inspection": false,
+  "base_version_changed_since_initial_onboarding_read": true,
+  "new_runtime_environment_confirmed": false,
+  "live_applied_config_version": "unknown",
+  "limitations": [
+    "Draft settings do not establish runtime policy",
+    "No live environment-status or instance-to-config mapping tool is available",
+    "A changed base version does not identify the version applied to this execution machine",
+    "Do not assume republishing alone will resolve the observed CONNECT rejection"
+  ]
+}

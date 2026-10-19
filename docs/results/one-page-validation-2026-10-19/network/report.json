@@ -1,0 +1,146 @@
+{
+  "mode": "network_diagnostics",
+  "started_at": "2026-10-19T03:15:47.368065+00:00",
+  "proxy_variable_presence": {
+    "HTTP_PROXY": true,
+    "HTTPS_PROXY": true,
+    "ALL_PROXY": false,
+    "NO_PROXY": true,
+    "http_proxy": true,
+    "https_proxy": true,
+    "all_proxy": false,
+    "no_proxy": true
+  },
+  "environment_generation": "unknown_no_live_instance_status_tool",
+  "notes": [
+    "Environment variable values, proxy URLs, credentials and raw curl stderr are not stored",
+    "DNS is a separate observation; CONNECT proxies may resolve destination hosts themselves",
+    "No proxy disabling, direct fallback, insecure TLS or redirect following is used",
+    "HEAD requests only; no broadcast content is collected"
+  ],
+  "hosts": [
+    {
+      "host": "example.com",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    },
+    {
+      "host": "github.com",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 0,
+      "connect_http_status": 200,
+      "origin_http_status": 200,
+      "tls": "verified",
+      "connect": "established",
+      "origin_http": "response_received",
+      "failure_stage": null,
+      "tls_verify_code": 0
+    },
+    {
+      "host": "program.kbs.co.kr",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    },
+    {
+      "host": "www.kbs.co.kr",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    },
+    {
+      "host": "schedule.kbs.co.kr",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    },
+    {
+      "host": "pbbs.kbs.co.kr",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    },
+    {
+      "host": "apis.kbs.co.kr",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    },
+    {
+      "host": "iaudience.kbs.co.kr",
+      "local_dns": {
+        "status": "failed",
+        "scope": "container_local_resolver_not_proxy_resolver"
+      },
+      "environment_proxy_selected": true,
+      "curl_exit_code": 56,
+      "connect_http_status": 403,
+      "origin_http_status": null,
+      "tls": "not_reached",
+      "connect": "rejected",
+      "origin_http": "not_reached",
+      "failure_stage": "connect_proxy"
+    }
+  ],
+  "finished_at": "2026-10-19T03:16:07.962659+00:00",
+  "status": "network_checked"
+}

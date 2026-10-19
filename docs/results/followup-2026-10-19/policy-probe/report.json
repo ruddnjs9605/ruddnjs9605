@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-19T02:35:26.893743+00:00",
+  "mode": "live_probe",
+  "program": "KBS 2TV 생생정보",
+  "requested_episode_count": 5,
+  "selected_episode_count": 0,
+  "successful_episode_count": 0,
+  "record_count": 0,
+  "latest_five_verified": false,
+  "events": [
+    {
+      "label": "프로그램 홈 후보(현재 URL 미검증)",
+      "stage": "policy_and_access",
+      "url": "https://program.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError"
+    },
+    {
+      "label": "공식 편성표 진입점 후보",
+      "stage": "policy_and_access",
+      "url": "https://schedule.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError"
+    },
+    {
+      "label": "KBS 공식 홈페이지",
+      "stage": "policy_and_access",
+      "url": "https://www.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError"
+    },
+    {
+      "label": "공식 게시판 호스트 후보(API 계약 미검증)",
+      "stage": "policy_and_access",
+      "url": "https://pbbs.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError"
+    },
+    {
+      "label": "API 호스트 후보(공개 API 제공 여부 미확인)",
+      "stage": "policy_and_access",
+      "url": "https://apis.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError"
+    },
+    {
+      "stage": "robots",
+      "url": "https://iaudience.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError",
+      "candidate_url": "https://iaudience.kbs.co.kr/broadcast/",
+      "content_requested": false,
+      "terms_permission": "unverified",
+      "api_contract": "unverified"
+    },
+    {
+      "stage": "robots",
+      "url": "https://iaudience.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError",
+      "candidate_url": "https://iaudience.kbs.co.kr/broadcast/11344",
+      "content_requested": false,
+      "terms_permission": "unverified",
+      "api_contract": "unverified"
+    },
+    {
+      "stage": "robots",
+      "url": "https://iaudience.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError",
+      "candidate_url": "https://iaudience.kbs.co.kr/broadcast/11279",
+      "content_requested": false,
+      "terms_permission": "unverified",
+      "api_contract": "unverified"
+    },
+    {
+      "stage": "robots",
+      "url": "https://iaudience.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "detail": "ProxyError",
+      "candidate_url": "https://iaudience.kbs.co.kr/broadcast/11234",
+      "content_requested": false,
+      "terms_permission": "unverified",
+      "api_contract": "unverified"
+    }
+  ],
+  "limitations": [
+    "실제 KBS DOM 적합성은 라이브 본문 수집 후 검증 필요",
+    "방송일은 게시일/요일로 추정하지 않음",
+    "추출 필드는 사람 대조 전 검증된 정보로 취급하지 않음"
+  ],
+  "status": "access_checked_not_collected",
+  "audit": [
+    {
+      "url": "https://program.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://schedule.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://pbbs.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://apis.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://iaudience.kbs.co.kr/robots.txt",
+      "outcome": "proxy_error",
+      "error_type": "ProxyError"
+    }
+  ],
+  "finished_at": "2026-10-19T02:35:36.900859+00:00"
+}

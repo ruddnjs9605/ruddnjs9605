@@ -1,0 +1,186 @@
+[
+  {
+    "schema_version": 2,
+    "id": "c119fc3ca1ab31892fdd",
+    "program": "생생정보 스페셜",
+    "category": "restaurant",
+    "facts": {
+      "name": {
+        "value": "가상식당 감마",
+        "status": "extracted_needs_review",
+        "evidence": "식당명: 가상식당 감마",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "address": {
+        "value": "가상시 합성로 0",
+        "status": "extracted_needs_review",
+        "evidence": "주소: 가상시 합성로 0",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "representative_menu": {
+        "value": "확인 필요",
+        "status": "missing",
+        "evidence": "",
+        "source_url": ""
+      },
+      "broadcast_date": {
+        "value": "2026-09-01",
+        "status": "extracted_needs_review",
+        "evidence": "원방송일: 2026년 9월 1일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "episode_number": {
+        "value": "확인 필요",
+        "status": "missing",
+        "evidence": "",
+        "source_url": ""
+      },
+      "program_name": {
+        "value": "생생정보 스페셜",
+        "status": "extracted_needs_review",
+        "evidence": "프로그램명: 생생정보 스페셜",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "posted_date": {
+        "value": "2026-10-19",
+        "status": "extracted_needs_review",
+        "evidence": "게시일: 2026년 10월 19일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "corner_name": {
+        "value": "합성 맛집 코너",
+        "status": "extracted_needs_review",
+        "evidence": "코너명: 합성 맛집 코너",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "place_type": {
+        "value": "식당",
+        "status": "extracted_needs_review",
+        "evidence": "식당명: 가상식당 감마",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "introduced_menu": {
+        "value": "가상 국수",
+        "status": "extracted_needs_review",
+        "evidence": "소개된 음식: 가상 국수",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "original_broadcast_date": {
+        "value": "2026-09-01",
+        "status": "extracted_needs_review",
+        "evidence": "원방송일: 2026년 9월 1일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "rebroadcast_date": {
+        "value": "2026-10-18",
+        "status": "extracted_needs_review",
+        "evidence": "재방송일: 2026년 10월 18일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "is_rebroadcast": {
+        "value": "예",
+        "status": "extracted_needs_review",
+        "evidence": "재방송일: 2026년 10월 18일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      }
+    },
+    "official_source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special",
+    "additional_sources": [],
+    "collected_at": "2026-10-19T02:38:00.616911+00:00",
+    "source_mode": "synthetic_fixture",
+    "independent_confirmation": "확인 필요",
+    "publication_ready": false
+  },
+  {
+    "schema_version": 2,
+    "id": "6ebc1cce0c4c5143e1be",
+    "program": "생생정보 스페셜",
+    "category": "travel_site",
+    "facts": {
+      "name": {
+        "value": "가상 여행지 델타",
+        "status": "extracted_needs_review",
+        "evidence": "여행지명: 가상 여행지 델타",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "address": {
+        "value": "가상군 테스트길 0",
+        "status": "extracted_needs_review",
+        "evidence": "주소: 가상군 테스트길 0",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "representative_menu": {
+        "value": "확인 필요",
+        "status": "missing",
+        "evidence": "",
+        "source_url": ""
+      },
+      "broadcast_date": {
+        "value": "2026-08-02",
+        "status": "extracted_needs_review",
+        "evidence": "원방송일: 2026년 8월 2일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "episode_number": {
+        "value": "확인 필요",
+        "status": "missing",
+        "evidence": "",
+        "source_url": ""
+      },
+      "program_name": {
+        "value": "생생정보 스페셜",
+        "status": "extracted_needs_review",
+        "evidence": "프로그램명: 생생정보 스페셜",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "posted_date": {
+        "value": "2026-10-19",
+        "status": "extracted_needs_review",
+        "evidence": "게시일: 2026년 10월 19일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "corner_name": {
+        "value": "합성 여행 코너",
+        "status": "extracted_needs_review",
+        "evidence": "코너: 합성 여행 코너",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "place_type": {
+        "value": "여행지",
+        "status": "extracted_needs_review",
+        "evidence": "여행지명: 가상 여행지 델타",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "introduced_menu": {
+        "value": "확인 필요",
+        "status": "missing",
+        "evidence": "",
+        "source_url": ""
+      },
+      "original_broadcast_date": {
+        "value": "2026-08-02",
+        "status": "extracted_needs_review",
+        "evidence": "원방송일: 2026년 8월 2일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "rebroadcast_date": {
+        "value": "2026-10-18",
+        "status": "extracted_needs_review",
+        "evidence": "재방송일: 2026년 10월 18일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      },
+      "is_rebroadcast": {
+        "value": "예",
+        "status": "extracted_needs_review",
+        "evidence": "재방송일: 2026년 10월 18일",
+        "source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special"
+      }
+    },
+    "official_source_url": "https://iaudience.kbs.co.kr/__synthetic_fixture__/special",
+    "additional_sources": [],
+    "collected_at": "2026-10-19T02:38:00.616957+00:00",
+    "source_mode": "synthetic_fixture",
+    "independent_confirmation": "확인 필요",
+    "publication_ready": false
+  }
+]

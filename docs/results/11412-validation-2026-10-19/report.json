@@ -1,0 +1,33 @@
+{
+  "mode": "actual_page_validation",
+  "status": "blocked_policy_unverified",
+  "checked_at": "2026-10-19T04:09:49.924247+00:00",
+  "source_url": "https://iaudience.kbs.co.kr/broadcast/11412",
+  "detail_requested": false,
+  "actual_html_count": 0,
+  "page_count": 0,
+  "program_count": 0,
+  "corner_count": 0,
+  "place_count": 0,
+  "record_count": 0,
+  "candidate_count": 0,
+  "actual_parser_validation": "not_run",
+  "five_page_validation": "not_run_first_page_unvalidated",
+  "robots_observation": "iaudience robots.txt HTTP404; no explicit allow/reuse permission established",
+  "terms_and_reuse_permission": "unverified",
+  "policy_evidence_report": "outputs/11412-policy-research-01/report.json",
+  "user_assertions": "docs/manual-html/11412.reference-manifest.json (not dataset)",
+  "reason": "User instruction: do not request detail HTML when automatic collection permission is unclear.",
+  "implemented": [
+    "rule_based_candidate_generator",
+    "external_expected_value_matching_by_place"
+  ],
+  "deferred": [
+    "actual_DOM_adapter",
+    "page_program_corner_place_hierarchy_from_actual_HTML",
+    "scheduled_date_time_and_original_dates_from_actual_HTML",
+    "price_and_opening_hours_when_present",
+    "five_posting_dates_collection"
+  ],
+  "publication_ready": false
+}

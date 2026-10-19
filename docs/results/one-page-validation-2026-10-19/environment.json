@@ -1,0 +1,23 @@
+{
+  "observation_source": "editable configuration draft, not live runtime",
+  "draft_revision": 4,
+  "base_version_id": "a5a198d3-74aa-4451-9d8e-b8e241bfd863~cecfgver_6ad57da7cd6481918395c22c9a95e5bc",
+  "network_type": "restricted",
+  "custom_hosts": [
+    "apis.kbs.co.kr",
+    "iaudience.kbs.co.kr",
+    "pbbs.kbs.co.kr",
+    "program.kbs.co.kr",
+    "schedule.kbs.co.kr",
+    "www.kbs.co.kr"
+  ],
+  "network_draft_changed_this_attempt": false,
+  "live_applied_config_version": "unknown",
+  "new_environment_required": "not_confirmable",
+  "runtime_policy_tool_available": false,
+  "notes": [
+    "All six requested KBS domains are present in the editable draft.",
+    "Runtime CONNECT403 remains observed; saved allowlist does not establish applied policy.",
+    "No proxy bypass, TLS verification disabling or repeated content requests were used."
+  ]
+}
