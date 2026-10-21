@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Insta Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Insta Studio</h1>
+    <p>소재 링크·글 → 요약 · 제목 · 캡션 · 이미지 → 인스타그램</p>
+  </header>
+
+  <main>
+    <section class="card" id="step-source">
+      <h2><span class="num">1</span> 소재 넣기</h2>
+      <label for="url">기사·글 링크</label>
+      <div class="row">
+        <input id="url" type="url" inputmode="url" placeholder="https://..." autocomplete="off">
+        <button id="btn-extract" class="secondary">가져오기</button>
+      </div>
+      <p class="hint" id="extract-status"></p>
+
+      <label for="source-text">본문 (링크로 못 가져오면 직접 붙여넣기)</label>
+      <textarea id="source-text" rows="8" placeholder="기사나 커뮤니티 글 내용을 붙여넣으세요"></textarea>
+
+      <div class="grid2">
+        <div>
+          <label for="source-title">원문 제목</label>
+          <input id="source-title" type="text">
+        </div>
+        <div>
+          <label for="source-name">출처 (매체/사이트명)</label>
+          <input id="source-name" type="text" placeholder="예: 연합뉴스">
+        </div>
+      </div>
+
+      <label for="tone">톤</label>
+      <select id="tone"></select>
+
+      <button id="btn-generate" class="primary wide">AI로 게시물 만들기</button>
+      <p class="hint" id="generate-status"></p>
+    </section>
+
+    <section class="card hidden" id="step-draft">
+      <h2><span class="num">2</span> 요약 · 제목 · 캡션</h2>
+      <div id="cautions" class="caution hidden"></div>
+
+      <h3>핵심 요약</h3>
+      <ul id="summary"></ul>
+
+      <h3>제목 후보 <small>(누르면 이미지에 적용)</small></h3>
+      <div id="titles" class="chips"></div>
+
+      <label for="caption">캡션</label>
+      <textarea id="caption" rows="9"></textarea>
+      <label for="hashtags">해시태그</label>
+      <textarea id="hashtags" rows="3"></textarea>
+      <p class="hint"><span id="caption-count">0</span> / 2,200자 · 해시태그 <span id="tag-count">0</span> / 30개</p>
+    </section>
+
+    <section class="card hidden" id="step-image">
+      <h2><span class="num">3</span> 이미지</h2>
+      <div class="preview-wrap">
+        <canvas id="canvas" width="1080" height="1440"></canvas>
+      </div>
+
+      <label for="img-title">이미지 제목 — 줄바꿈 가능, <b class="red">*강조*</b> 하면 빨간 글씨</label>
+      <textarea id="img-title" rows="3"></textarea>
+      <label for="img-source">출처 표기 (작게, 맨 아래)</label>
+      <input id="img-source" type="text">
+
+      <div class="grid2">
+        <div>
+          <label for="ratio">비율</label>
+          <select id="ratio">
+            <option value="1440">3:4 (1080×1440)</option>
+            <option value="1350">4:5 (1080×1350)</option>
+            <option value="1080">1:1 (1080×1080)</option>
+          </select>
+        </div>
+        <div>
+          <label for="layout">사진 배치</label>
+          <select id="layout">
+            <option value="cover">사진 꽉 채우기 + 하단 그라데이션</option>
+            <option value="band">사진 위 + 하단 검은 띠</option>
+          </select>
+        </div>
+      </div>
+
+      <label>배경</label>
+      <div class="chips" id="bg-options">
+        <button data-bg="source" class="chip" id="bg-source-btn" disabled>원문 이미지</button>
+        <label class="chip upload">사진 업로드<input id="bg-upload" type="file" accept="image/*" hidden></label>
+        <button data-bg="theme-0" class="chip">네이비</button>
+        <button data-bg="theme-1" class="chip">선셋</button>
+        <button data-bg="theme-2" class="chip">포레스트</button>
+        <button data-bg="theme-3" class="chip">블랙</button>
+      </div>
+      <p class="hint warn" id="bg-warning">원문 사진은 저작권이 매체에 있습니다. 가능하면 직접 찍은 사진이나 무료 이미지를 쓰세요.</p>
+
+      <div class="grid2">
+        <div>
+          <label for="font-size">글씨 크기 <output id="font-size-out">68</output></label>
+          <input id="font-size" type="range" min="44" max="110" value="68">
+        </div>
+        <div>
+          <label for="shade">그라데이션 진하기 <output id="shade-out">85</output>%</label>
+          <input id="shade" type="range" min="0" max="100" value="85">
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label for="align">정렬</label>
+          <select id="align">
+            <option value="center">가운데</option>
+            <option value="left">왼쪽</option>
+          </select>
+        </div>
+        <div>
+          <label for="accent">강조 색</label>
+          <input id="accent" type="color" value="#ff2d2d">
+        </div>
+      </div>
+    </section>
+
+    <section class="card hidden" id="step-export">
+      <h2><span class="num">4</span> 올리기</h2>
+      <div class="actions">
+        <button id="btn-share" class="primary">공유하기 (인스타 앱으로)</button>
+        <button id="btn-download" class="secondary">이미지 저장</button>
+        <button id="btn-copy" class="secondary">캡션 복사</button>
+        <button id="btn-publish" class="primary hidden">인스타그램에 바로 게시</button>
+      </div>
+      <p class="hint" id="export-status"></p>
+      <p class="hint">휴대폰에서는 <b>공유하기</b> → Instagram을 고르면 이미지가 넘어갑니다. 캡션은 먼저 복사해 두고 붙여넣으세요.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
