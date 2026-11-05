@@ -1,0 +1,329 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;background:#0b1220;overflow:hidden}
+svg{display:block}
+text{font-family:Pretendard,'Noto Sans KR','WenQuanYi Zen Hei',sans-serif}
+</style></head>
+<body>
+<svg id="s" width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"></svg>
+<script>
+const FPS = 30, DUR = 29.5, TOTAL = Math.round(FPS * DUR);
+const ICE = '#bfe9ff', WATER = '#3b8fe0', YEL = '#ffd166', WARM = '#ff9a4a', BG = '#0b1220', GRAY = '#a9b6c8';
+
+// ---------- helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = t => 1 - Math.pow(1 - clamp(t), 3);
+const ease = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+const back = t => { t = clamp(t); const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const win = (t, a, b, f = .25) => clamp((t - a) / f) * clamp((b - t) / f);
+const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); t = clamp(t); return '#' + A.map((v, i) => Math.round(lerp(v, B[i], t)).toString(16).padStart(2, '0')).join(''); };
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const f1 = v => v.toFixed(1);
+const sc2 = v => (Math.round(v * 1000) / 1000);
+function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+const tlen = s => [...s].reduce((a, c) => a + (c.charCodeAt(0) > 0x2000 ? 1 : 0.55), 0);
+
+function txt(x, y, str, size, o = {}) {
+  const { fill = '#fff', weight = 800, anchor = 'middle', op = 1, stroke = null } = o;
+  const st = stroke ? `stroke="${stroke}" stroke-width="${size * 0.14}" stroke-linejoin="round" paint-order="stroke"` : '';
+  return `<text x="${f1(x)}" y="${f1(y)}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" opacity="${sc2(op)}" ${st}>${esc(str)}</text>`;
+}
+function headline(t, a, b, lines, y = 250, size = 84) {
+  const op = win(t, a, b, .3); if (op <= 0) return '';
+  const dy = (1 - easeOut(prog(t, a, a + .4))) * 30;
+  let s = `<g opacity="${sc2(op)}" transform="translate(0 ${f1(dy)})">`;
+  lines.forEach((l, i) => { s += txt(540, y + i * size * 1.25, l[0], size, { fill: l[1] || '#fff', stroke: BG }); });
+  return s + '</g>';
+}
+function caption(t, a, b, str) {
+  const op = win(t, a, b, .2); if (op <= 0) return '';
+  const ls = str.split('\n'), fs = 52, lh = 74;
+  const w = Math.min(1020, Math.max(...ls.map(tlen)) * fs + 90), h = ls.length * lh + 46;
+  const y0 = 1650 - h / 2, dy = (1 - easeOut(prog(t, a, a + .3))) * 24;
+  let s = `<g opacity="${sc2(op)}" transform="translate(0 ${f1(dy)})"><rect x="${f1(540 - w / 2)}" y="${f1(y0)}" width="${f1(w)}" height="${h}" rx="30" fill="#000" opacity=".58"/>`;
+  ls.forEach((l, i) => { s += txt(540, y0 + 23 + lh * (i + .5) + fs * .36, l, fs, { weight: 700 }); });
+  return s + '</g>';
+}
+function pop(t, a, b, x, y, str, size, fill = YEL, rot = -8) {
+  const op = win(t, a, b, .12); if (op <= 0) return '';
+  const sc = back(prog(t, a, a + .25));
+  return `<g opacity="${sc2(op)}" transform="translate(${f1(x)} ${f1(y)}) rotate(${rot}) scale(${sc2(sc)})">${txt(0, 0, str, size, { fill, stroke: BG })}</g>`;
+}
+function ripple(x, y, t, h, color = '#ffffff') {
+  const te = t - h; if (te < 0 || te > .45) return '';
+  const p = te / .45;
+  return `<circle cx="${x}" cy="${y}" r="${f1(20 + p * 120)}" fill="none" stroke="${color}" stroke-width="${f1(8 * (1 - p) + 1)}" opacity="${sc2(1 - p)}"/>`;
+}
+
+// ---------- ice dendrites (hexagonal branching, grown by distance) ----------
+function makeDendrite(seed, ox, oy, inside, maxSeg = 900) {
+  const r = rng(seed), segs = [], occ = new Map(), cell = 26;
+  const q = [];
+  for (let k = 0; k < 6; k++) q.push({ x: ox, y: oy, a: k * Math.PI / 3 + .25, d: 0, w: 6 });
+  while (q.length && segs.length < maxSeg) {
+    const b = q.shift(), L = 26 + r() * 30;
+    const nx = b.x + Math.cos(b.a) * L, ny = b.y + Math.sin(b.a) * L;
+    if (!inside(nx, ny)) continue;
+    const key = Math.floor(nx / cell) + ',' + Math.floor(ny / cell), n = occ.get(key) || 0;
+    if (n >= 2) continue; occ.set(key, n + 1);
+    segs.push({ x1: b.x, y1: b.y, x2: nx, y2: ny, d0: b.d, len: L, w: b.w });
+    q.push({ x: nx, y: ny, a: b.a + (r() - .5) * .25, d: b.d + L, w: Math.max(1.6, b.w * .93) });
+    if (r() < .5) q.push({ x: nx, y: ny, a: b.a + (r() < .5 ? 1 : -1) * Math.PI / 3, d: b.d + L, w: Math.max(1.3, b.w * .68) });
+  }
+  return segs;
+}
+function drawDendrite(segs, G, op = 1, color = '#ffffff') {
+  if (G <= 0) return '';
+  let thick = '', thin = '';
+  for (const s of segs) {
+    if (G <= s.d0) continue;
+    const f = clamp((G - s.d0) / s.len), x2 = s.x1 + (s.x2 - s.x1) * f, y2 = s.y1 + (s.y2 - s.y1) * f;
+    const seg = `M${f1(s.x1)},${f1(s.y1)}L${f1(x2)},${f1(y2)}`;
+    if (s.w > 3) thick += seg; else thin += seg;
+  }
+  return `<g opacity="${sc2(op)}" stroke="${color}" stroke-linecap="round" fill="none"><path d="${thick}" stroke-width="4.5"/><path d="${thin}" stroke-width="2.2" opacity=".85"/></g>`;
+}
+
+// ---------- bottle ----------
+const BOTTLE = 'M470,560 L610,560 L610,640 Q610,680 660,700 Q710,720 710,780 L710,1400 Q710,1430 680,1430 L400,1430 Q370,1430 370,1400 L370,780 Q370,720 420,700 Q470,680 470,640 Z';
+const WTOP = 770;
+const BOTTLE_TREE = makeDendrite(4, 548, WTOP + 8, (x, y) => x > 382 && x < 698 && y > WTOP + 4 && y < 1418, 1100);
+function bottle(t, freezeStart, o = {}) {
+  const G = freezeStart == null ? 0 : Math.max(0, (t - freezeStart) * 330);
+  const slush = clamp(G / 700);
+  const wave = Array.from({ length: 18 }, (_, i) => { const x = 372 + i * 20; return `${x},${f1(WTOP + Math.sin(i * .7 + t * 4) * 4 * (1 - slush))}`; }).join(' ');
+  let s = `<clipPath id="bclip"><path d="${BOTTLE}"/></clipPath>`;
+  s += `<g clip-path="url(#bclip)"><polygon points="${wave} 712,1440 368,1440" fill="url(#water)"/>`;
+  if (G > 0) s += `<circle cx="548" cy="${WTOP + 8}" r="${f1(G * 1.02)}" fill="#e8f6ff" opacity="${sc2(.38 * slush + .12)}"/>`;
+  s += drawDendrite(BOTTLE_TREE, G) + '</g>';
+  s += `<path d="${BOTTLE}" fill="none" stroke="#d7e6f5" stroke-width="7" opacity=".85"/>`;
+  s += `<rect x="462" y="510" width="156" height="58" rx="12" fill="#2f6fd0"/><rect x="462" y="528" width="156" height="6" fill="#ffffff" opacity=".25"/>`;
+  s += `<rect x="392" y="790" width="22" height="560" rx="11" fill="#ffffff" opacity=".18"/>`;
+  return s;
+}
+function readout(x, y, val, label, color = ICE) {
+  return `<g transform="translate(${x} ${y})"><rect x="-200" y="-62" width="400" height="96" rx="22" fill="#000" opacity=".5" stroke="${color}" stroke-width="3"/>
+    ${txt(-170, -2, label, 34, { anchor: 'start', fill: GRAY, weight: 700 })}${txt(175, 4, val, 58, { anchor: 'end', fill: color })}</g>`;
+}
+
+// ---------- molecules ----------
+function mol(x, y, a, s = 1, op = 1) {
+  const h1 = a + .91, h2 = a - .91, d = 17 * s;
+  return `<g opacity="${sc2(op)}"><circle cx="${f1(x + Math.cos(h1) * d)}" cy="${f1(y + Math.sin(h1) * d)}" r="${f1(7.5 * s)}" fill="#f4f7fb"/><circle cx="${f1(x + Math.cos(h2) * d)}" cy="${f1(y + Math.sin(h2) * d)}" r="${f1(7.5 * s)}" fill="#f4f7fb"/><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(13 * s)}" fill="#ff6b6b"/></g>`;
+}
+const MC = [540, 900], MR = 300;
+const LATTICE = (() => { // honeycomb points
+  const b = 58, pts = [], h = b * Math.sqrt(3) / 2;
+  for (let i = -8; i <= 8; i++) for (let j = -8; j <= 8; j++) {
+    const cx = i * 1.5 * b, cy = (j + (i & 1 ? .5 : 0)) * 2 * h;
+    for (const [dx, dy] of [[-b / 2, 0], [b / 2, 0]]) {
+      const x = cx + dx, y = cy + dy;
+      if (Math.hypot(x, y) < MR - 34 && !pts.some(p => Math.hypot(p[0] - x, p[1] - y) < 5)) pts.push([x, y]);
+    }
+  }
+  return pts.sort((p, q) => Math.hypot(...p) - Math.hypot(...q));
+})();
+const BONDS = (() => { const a = []; for (let i = 0; i < LATTICE.length; i++) for (let j = i + 1; j < LATTICE.length; j++) { const d = Math.hypot(LATTICE[i][0] - LATTICE[j][0], LATTICE[i][1] - LATTICE[j][1]); if (d > 50 && d < 66) a.push([i, j]); } return a; })();
+const MOLS = (() => { // wandering molecules, sorted by distance so they map to nearby lattice points
+  const r = rng(17), a = [];
+  while (a.length < LATTICE.length) {
+    const x = (r() * 2 - 1) * (MR - 30), y = (r() * 2 - 1) * (MR - 30);
+    if (Math.hypot(x, y) > MR - 30 || a.some(p => Math.hypot(p.x - x, p.y - y) < 44)) { if (r() < .002) break; continue; }
+    a.push({ x, y, p1: r() * 6.28, p2: r() * 6.28, w1: 1.5 + r() * 2, w2: 1.5 + r() * 2, a0: r() * 6.28, spin: (r() - .5) * 3 });
+  }
+  return a.sort((p, q) => Math.hypot(p.x, p.y) - Math.hypot(q.x, q.y));
+})();
+const SEED6 = [0, 1, 2, 3, 4, 5].map(k => [Math.cos(k * Math.PI / 3) * 58, Math.sin(k * Math.PI / 3) * 58]);
+function wander(m, t) { return [m.x + Math.sin(t * m.w1 + m.p1) * 16, m.y + Math.sin(t * m.w2 + m.p2) * 16, m.a0 + t * m.spin]; }
+
+// ---------- scenes ----------
+function sceneA(t) { // 0 - 7.5 : the hook
+  let s = headline(t, .15, 3.5, [['영하 8℃인데'], ['안 얼어 있는 물?', YEL]], 230, 84);
+  s += headline(t, 3.55, 7.4, [['톡 치는 순간'], ['얼어붙는다!', ICE]], 230, 84);
+  const TAP = 3.6;
+  // frost background sparkle
+  s += bottle(t, t >= TAP ? TAP + .05 : null);
+  // finger
+  if (t > 2.6 && t < 4.6) {
+    const inn = easeOut(prog(t, 2.6, 3.3)), hit = t < TAP ? ease(prog(t, 3.35, TAP)) : 1 - easeOut(prog(t, TAP, TAP + .3)), out = prog(t, 4.1, 4.6);
+    const x = lerp(1000, 760, inn) - hit * 40 + out * 400;
+    s += `<g opacity="${sc2(1 - out)}"><rect x="${f1(x)}" y="590" width="260" height="70" rx="35" fill="#f2c9a0"/><rect x="${f1(x + 8)}" y="604" width="44" height="42" rx="18" fill="#ffe3cc" opacity=".8"/></g>`;
+  }
+  s += ripple(735, 625, t, TAP, ICE);
+  s += pop(t, TAP, TAP + .6, 840, 560, '톡!', 84, '#ffffff', 10);
+  // temperature readout: -8.0 -> 0.0 while freezing (latent heat)
+  const temp = lerp(-8, 0, easeOut(prog(t, TAP + .3, 6.4)));
+  s += readout(540, 1520, (temp <= -0.05 ? '-' : '') + Math.abs(temp).toFixed(1) + '℃', '물 온도', temp > -0.05 ? '#7dffb0' : ICE);
+  s += caption(t, .3, 3.4, '영하 8℃까지 식혔는데 아직 액체');
+  s += caption(t, 3.6, 5.5, '병을 톡 치는 순간…');
+  s += caption(t, 5.6, 7.4, '눈앞에서 얼음이 퍼져 나가요');
+  return s;
+}
+function snowflake(x, y, r, rot, op = 1) {
+  let d = '';
+  for (let k = 0; k < 6; k++) {
+    const a = rot + k * Math.PI / 3, c = Math.cos(a), n = Math.sin(a);
+    d += `M${f1(x)},${f1(y)}L${f1(x + c * r)},${f1(y + n * r)}`;
+    for (const f of [.45, .7]) {
+      const bx = x + c * r * f, by = y + n * r * f, L = r * (f === .45 ? .32 : .22);
+      for (const sg of [1, -1]) { const b = a + sg * Math.PI / 3; d += `M${f1(bx)},${f1(by)}L${f1(bx + Math.cos(b) * L)},${f1(by + Math.sin(b) * L)}`; }
+    }
+  }
+  return `<path d="${d}" stroke="${ICE}" stroke-width="${f1(r * .07)}" stroke-linecap="round" fill="none" opacity="${sc2(op)}" filter="url(#glow)"/>`;
+}
+function sceneB(t) { // 7.5 - 10.8 : title
+  const a = 7.5, sc = back(prog(t, a, a + .5));
+  let s = `<g transform="translate(540 760) scale(${sc2(sc)}) translate(-540 -760)">${snowflake(540, 760, 190, (t - a) * .35)}</g>`;
+  s += `<g opacity="${sc2(easeOut(prog(t, a + .3, a + .8)))}" filter="url(#glow)">${txt(540, 1110, '과냉각', 160)}</g>`;
+  s += txt(540, 1200, 'Supercooling', 56, { fill: ICE, weight: 600, op: easeOut(prog(t, a + .6, a + 1.0)) });
+  s += txt(540, 1290, '0℃보다 차가운데 얼지 않은 상태', 44, { fill: GRAY, weight: 600, op: easeOut(prog(t, a + .9, a + 1.3)) });
+  s += caption(t, 7.8, 10.6, "이 현상의 이름은 '과냉각'");
+  return s;
+}
+function moleculeView(t, opts) {
+  // opts: seedT (cluster attempt start) or freezeT (lattice growth start)
+  let s = `<clipPath id="mclip"><circle cx="${MC[0]}" cy="${MC[1]}" r="${MR}"/></clipPath>`;
+  s += `<circle cx="${MC[0]}" cy="${MC[1]}" r="${MR}" fill="#0f2440"/><g clip-path="url(#mclip)">`;
+  const fz = opts.freezeT;
+  if (fz != null) {
+    let b = '';
+    for (const [i, j] of BONDS) {
+      const ti = fz + Math.hypot(...LATTICE[i]) / 330 + .2, tj = fz + Math.hypot(...LATTICE[j]) / 330 + .2, k = prog(t, Math.max(ti, tj), Math.max(ti, tj) + .2);
+      if (k > 0) b += `<line x1="${f1(MC[0] + LATTICE[i][0])}" y1="${f1(MC[1] + LATTICE[i][1])}" x2="${f1(MC[0] + LATTICE[j][0])}" y2="${f1(MC[1] + LATTICE[j][1])}" stroke="${ICE}" stroke-width="5" opacity="${sc2(k * .6)}"/>`;
+    }
+    s += b;
+  }
+  MOLS.forEach((m, i) => {
+    let [x, y, a] = wander(m, t);
+    if (opts.seedT != null && i < 6) {
+      const k = ease(prog(t, opts.seedT, opts.seedT + .6)) * (1 - ease(prog(t, opts.seedT + 1.1, opts.seedT + 1.7)));
+      const shake = k * Math.sin(t * 40) * 4 * prog(t, opts.seedT + .7, opts.seedT + 1.1);
+      x = lerp(x, SEED6[i][0] + shake, k); y = lerp(y, SEED6[i][1], k); a = lerp(a, i * Math.PI / 3 + Math.PI / 2, k);
+    }
+    if (fz != null) {
+      const ts = fz + Math.hypot(...LATTICE[i]) / 330, k = easeOut(prog(t, ts, ts + .25));
+      x = lerp(x, LATTICE[i][0], k); y = lerp(y, LATTICE[i][1], k); a = lerp(a, (i % 2 ? 0 : Math.PI) + Math.PI / 2, k);
+    }
+    s += mol(MC[0] + x, MC[1] + y, a);
+  });
+  s += `</g><circle cx="${MC[0]}" cy="${MC[1]}" r="${MR}" fill="none" stroke="#7fb6ff" stroke-width="6" opacity=".7"/>`;
+  return s;
+}
+function sceneC(t) { // 10.8 - 16.0 : why it does not freeze
+  let s = headline(t, 10.85, 15.9, [['왜 안 얼까?']], 210, 80);
+  const sc = back(prog(t, 10.8, 11.3));
+  const SEED = 12.6;
+  s += `<g transform="translate(540 900) scale(${sc2(sc)}) translate(-540 -900)">${moleculeView(t, { seedT: SEED })}`;
+  const hk = win(t, SEED + .55, SEED + 1.15, .1);
+  if (hk > 0) { let d = SEED6.map((p, i) => (i ? 'L' : 'M') + f1(540 + p[0]) + ',' + f1(900 + p[1])).join('') + 'Z'; s += `<path d="${d}" fill="none" stroke="${YEL}" stroke-width="5" stroke-dasharray="10 8" opacity="${sc2(hk)}"/>`; }
+  s += '</g>';
+  s += txt(540, 545, '얼음 씨앗이 되려다…', 46, { fill: YEL, op: win(t, SEED + .1, SEED + 1.2, .2), stroke: BG });
+  s += txt(540, 545, '금방 흩어짐', 46, { fill: '#ff9b6b', op: win(t, SEED + 1.25, 15.8, .2), stroke: BG });
+  // legend
+  const lg = prog(t, 11.3, 11.7);
+  s += `<g opacity="${sc2(lg)}">${mol(420, 1290, -Math.PI / 2, 1.2)}${txt(460, 1305, '= 물 분자', 42, { anchor: 'start', weight: 700 })}</g>`;
+  s += caption(t, 10.9, 13.5, "물이 얼려면 분자들이 얼음 모양으로\n줄 설 '시작점(씨앗)'이 필요해요");
+  s += caption(t, 13.6, 15.9, '조용하고 깨끗한 물에선 씨앗이\n생겨도 금방 흩어져 버려요');
+  return s;
+}
+function sceneD(t) { // 16.0 - 21.6 : tap -> lattice -> latent heat
+  let s = headline(t, 16.05, 21.5, [['톡 치면 무슨 일이?']], 210, 76);
+  const TAP = 16.5, SH = ease(prog(t, 19.0, 19.6));
+  const k = lerp(1, .56, SH), y = lerp(900, 690, SH);
+  s += `<g transform="translate(540 ${f1(y)}) scale(${sc2(k)}) translate(-540 -900)">${moleculeView(t, { freezeT: TAP + .15 })}${ripple(540, 900, t, TAP, YEL)}</g>`;
+  s += pop(t, TAP, TAP + .6, 800, 560, '톡!', 80, '#ffffff', 10);
+  s += txt(540, 1290, '얼음 결정(육각형)이 퍼져 나감', 44, { fill: ICE, op: win(t, 17.0, 19.0, .2), stroke: BG });
+  // thermometer track
+  const th = prog(t, 19.3, 19.6);
+  if (th > 0) {
+    const X = T => 170 + (T + 10) / 12 * 740, Y = 1090;
+    const temp = lerp(-8, 0, easeOut(prog(t, 19.7, 20.7)));
+    s += `<g opacity="${sc2(th)}"><rect x="170" y="${Y - 12}" width="740" height="24" rx="12" fill="url(#therm)"/>`;
+    for (let T = -10; T <= 2; T += 2) s += `<line x1="${f1(X(T))}" y1="${Y + 18}" x2="${f1(X(T))}" y2="${Y + 34}" stroke="${GRAY}" stroke-width="3"/>` + txt(X(T), Y + 72, (T > 0 ? '+' : '') + T, 32, { fill: T === 0 ? '#ffffff' : GRAY, weight: 700 });
+    s += `<line x1="${f1(X(0))}" y1="${Y - 40}" x2="${f1(X(0))}" y2="${Y + 18}" stroke="#ffffff" stroke-width="4" stroke-dasharray="6 6"/>` + txt(X(0), Y + 118, '↑ 어는점', 32, { fill: '#ffffff', weight: 700 });
+    s += `<circle cx="${f1(X(temp))}" cy="${Y}" r="26" fill="${mix(ICE, '#7dffb0', prog(t, 19.7, 20.7))}" stroke="${BG}" stroke-width="6"/>`;
+    s += txt(X(temp), Y - 46, (temp <= -0.05 ? '-' : '') + Math.abs(temp).toFixed(1) + '℃', 44, { fill: '#ffffff', stroke: BG }) + '</g>';
+  }
+  const fr = prog(t, 20.8, 21.1);
+  if (fr > 0) s += `<g opacity="${sc2(fr)}">` + txt(540, 1350, '영하 8℃ 물이면 약 10%만 얼어요', 52, { fill: YEL, stroke: BG }) + txt(540, 1410, '(나머지는 0℃ 물 → 슬러시)', 36, { fill: GRAY, weight: 700 }) + '</g>';
+  s += caption(t, 16.1, 18.9, '충격으로 씨앗이 생기면\n분자들이 줄줄이 얼음으로 바뀌어요');
+  s += caption(t, 19.0, 21.5, '얼 때 나오는 열로 다시 0℃가 되어\n일부만 얼고 슬러시가 돼요');
+  return s;
+}
+const POUCH = 'M380,690 L700,690 Q820,690 820,810 L820,970 Q820,1090 700,1090 L380,1090 Q260,1090 260,970 L260,810 Q260,690 380,690 Z';
+const POUCH_TREE = makeDendrite(23, 690, 800, (x, y) => x > 272 && x < 808 && y > 702 && y < 1078, 1000);
+function pouch(t, start, clearT = null) {
+  const G = start == null ? 0 : Math.max(0, (t - start) * 360), wh = clamp(G / 520);
+  const clr = clearT == null ? 0 : ease(prog(t, clearT, clearT + 1.4));
+  let s = `<clipPath id="pclip"><path d="${POUCH}"/></clipPath><path d="${POUCH}" fill="#cfe9ff" opacity=".22"/>`;
+  s += `<g clip-path="url(#pclip)" opacity="${sc2(1 - clr)}"><circle cx="690" cy="800" r="${f1(G * 1.05)}" fill="#f4f8ff" opacity="${sc2(.75 * wh)}"/>${drawDendrite(POUCH_TREE, G, 1, '#ffffff')}</g>`;
+  s += `<path d="${POUCH}" fill="none" stroke="#e6f1ff" stroke-width="7" opacity=".85"/>`;
+  s += `<circle cx="690" cy="800" r="44" fill="#c9d2de" stroke="#8e99a8" stroke-width="5"/><circle cx="690" cy="800" r="26" fill="none" stroke="#8e99a8" stroke-width="4"/>`;
+  return s;
+}
+function sceneE(t) { // 21.6 - 26.0 : hand warmer
+  let s = headline(t, 21.65, 25.9, [['이 원리, 어디에 쓰일까?']], 230, 70);
+  const CLICK = 22.7, warm = ease(prog(t, 23.1, 24.6));
+  s += `<circle cx="540" cy="890" r="${f1(330 + warm * 60)}" fill="url(#halo)" opacity="${sc2(warm)}"/>`;
+  const sc = back(prog(t, 21.6, 22.1));
+  s += `<g transform="translate(540 890) scale(${sc2(sc)}) translate(-540 -890)">${pouch(t, t >= CLICK ? CLICK + .05 : null)}</g>`;
+  s += txt(420, 640, '똑딱이 손난로', 54, { fill: '#ffffff', op: prog(t, 21.9, 22.2), stroke: BG });
+  if (t > 22.0 && t < 23.4) {
+    const inn = easeOut(prog(t, 22.0, 22.5)), press = t < CLICK ? ease(prog(t, 22.5, CLICK)) : 1 - easeOut(prog(t, CLICK, CLICK + .3)), out = prog(t, 23.0, 23.4);
+    const y = lerp(430, 610, inn) + press * 120 - out * 200;
+    s += `<g opacity="${sc2(prog(t, 22.0, 22.25) * (1 - out))}"><rect x="655" y="${f1(y - 150)}" width="70" height="200" rx="35" fill="#f2c9a0"/><rect x="669" y="${f1(y - 4)}" width="42" height="40" rx="16" fill="#ffe3cc" opacity=".8"/></g>`;
+  }
+  s += pop(t, CLICK, CLICK + .6, 860, 760, '딸깍!', 70, '#ffffff', 10);
+  const cOp = prog(t, 23.1, 23.4);
+  if (cOp > 0) {
+    const n = Math.round(lerp(20, 54, easeOut(prog(t, 23.2, 24.6))));
+    s += `<g opacity="${sc2(cOp)}">` + txt(540, 1250, '손난로 온도', 40, { fill: GRAY, weight: 700 }) + txt(540, 1360, `약 ${n}℃`, 104, { fill: mix(ICE, WARM, prog(t, 23.2, 24.6)), stroke: BG }) + txt(540, 1425, '(아세트산나트륨 용액)', 34, { fill: GRAY, weight: 600 }) + '</g>';
+  }
+  s += caption(t, 21.7, 23.3, '똑딱이 손난로도 같은 원리예요');
+  s += caption(t, 23.4, 25.9, '과냉각된 액체가 굳으면서\n열을 내 약 54℃까지 올라가요');
+  return s;
+}
+const BOIL = (() => { const r = rng(31), a = []; for (let i = 0; i < 40; i++) a.push({ x: 300 + r() * 480, t0: r() * 3, v: 200 + r() * 200, r: 6 + r() * 10 }); return a; })();
+function sceneF(t) { // 26.0 - 29.5 : reset
+  let s = headline(t, 26.05, 29.6, [['다시 쓰려면?']], 230, 76);
+  s += `<path d="M250,820 L830,820 L800,1240 Q795,1270 765,1270 L315,1270 Q285,1270 280,1240 Z" fill="#2a7bd1" opacity=".35"/>`;
+  s += `<g transform="translate(540 1040) scale(.62) translate(-540 -890)">${pouch(t, 0, 26.6)}</g>`;
+  for (const b of BOIL) { const te = (t - 26 + b.t0) % 1.6, y = 1250 - te * b.v; if (y < 840) continue; s += `<circle cx="${f1(b.x + Math.sin(te * 9) * 6)}" cy="${f1(y)}" r="${f1(b.r)}" fill="none" stroke="#e8f6ff" stroke-width="3" opacity=".6"/>`; }
+  s += `<path d="M230,800 L850,800 L815,1255 Q810,1290 775,1290 L305,1290 Q270,1290 265,1255 Z" fill="none" stroke="#9fb3c8" stroke-width="9" stroke-linejoin="round"/>`;
+  s += `<rect x="200" y="780" width="680" height="24" rx="12" fill="#9fb3c8"/>`;
+  for (let i = 0; i < 7; i++) { const x = 330 + i * 70, h = 40 + Math.sin(t * 14 + i * 2) * 12; s += `<path d="M${x - 22},1330 Q${x},${f1(1330 - h * 2)} ${x + 22},1330 Z" fill="${WARM}" opacity=".9"/>`; }
+  for (let i = 0; i < 3; i++) { const x = 400 + i * 140, o = ((t * .8 + i * .33) % 1); s += `<path d="M${x},${f1(760 - o * 120)} q20,-30 0,-60 q-20,-30 0,-60" stroke="#ffffff" stroke-width="6" fill="none" opacity="${sc2((1 - o) * .4)}"/>`; }
+  s += txt(540, 1440, '얼음에도 시작점이 필요하다', 58, { fill: YEL, op: prog(t, 28.0, 28.3), stroke: BG });
+  s += caption(t, 26.2, 29.6, '끓는 물에 데우면 다시 액체가 돼\n몇 번이고 다시 쓸 수 있어요');
+  return s;
+}
+
+const SCENES = [[0, 7.5, sceneA], [7.5, 10.8, sceneB], [10.8, 16.0, sceneC], [16.0, 21.6, sceneD], [21.6, 26.0, sceneE], [26.0, DUR, sceneF]];
+const DEFS = `<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#16304f"/><stop offset="1" stop-color="${BG}"/></radialGradient>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aa9f0" stop-opacity=".75"/><stop offset="1" stop-color="#1f5fb0" stop-opacity=".85"/></linearGradient>
+  <linearGradient id="therm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4aa3ff"/><stop offset=".83" stop-color="#bfe9ff"/><stop offset="1" stop-color="#ffb27a"/></linearGradient>
+  <radialGradient id="halo"><stop offset="0" stop-color="#ff9a4a" stop-opacity=".55"/><stop offset="1" stop-color="#ff7a2f" stop-opacity="0"/></radialGradient>
+  <filter id="glow" x="-30%" y="-50%" width="160%" height="200%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>`;
+const FLAKES = (() => { const r = rng(21), a = []; for (let i = 0; i < 60; i++) a.push({ x: r() * 1080, y: r() * 1920, r: 1 + r() * 2.4, v: 10 + r() * 25, o: .05 + r() * .12 }); return a; })();
+
+function render(f) {
+  const t = f / FPS;
+  let s = DEFS + `<rect width="1080" height="1920" fill="url(#bg)"/>`;
+  for (const p of FLAKES) s += `<circle cx="${f1(p.x + Math.sin(t + p.y) * 10)}" cy="${f1((p.y + t * p.v) % 1920)}" r="${f1(p.r)}" fill="#ffffff" opacity="${sc2(p.o)}"/>`;
+  for (const [a, b, fn] of SCENES) {
+    if (t < a - .001 || t > b + .001) continue;
+    const op = (a === 0 ? 1 : clamp((t - a) / .3)) * clamp((b - t) / .3 + (b === DUR ? 1 : 0));
+    s += `<g opacity="${sc2(op)}">${fn(t)}</g>`;
+  }
+  s += txt(1040, 80, '1분 물리', 30, { anchor: 'end', fill: '#ffffff', op: .35, weight: 700 });
+  document.getElementById('s').innerHTML = s;
+}
+render(0);
+</script>
+</body></html>
