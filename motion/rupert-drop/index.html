@@ -1,0 +1,365 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;background:#0b1220;overflow:hidden}
+svg{display:block}
+text{font-family:Pretendard,'Noto Sans KR','WenQuanYi Zen Hei',sans-serif}
+</style></head>
+<body>
+<svg id="s" width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"></svg>
+<script>
+const FPS = 30, DUR = 28.5, TOTAL = Math.round(FPS * DUR);
+const GLASS = '#8fe9e4', HOT = '#ff7a2f', YEL = '#ffd166', DEEP = '#3f8fa8', BG = '#0b1220';
+
+// ---------- helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = t => 1 - Math.pow(1 - clamp(t), 3);
+const easeIn = t => Math.pow(clamp(t), 3);
+const ease = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+const back = t => { t = clamp(t); const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const win = (t, a, b, f = .25) => clamp((t - a) / f) * clamp((b - t) / f);
+const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); t = clamp(t); return '#' + A.map((v, i) => Math.round(lerp(v, B[i], t)).toString(16).padStart(2, '0')).join(''); };
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const f1 = v => v.toFixed(1);
+function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+const tlen = s => [...s].reduce((a, c) => a + (c.charCodeAt(0) > 0x2000 ? 1 : 0.55), 0);
+
+function txt(x, y, str, size, o = {}) {
+  const { fill = '#fff', weight = 800, anchor = 'middle', op = 1, stroke = null } = o;
+  const st = stroke ? `stroke="${stroke}" stroke-width="${size * 0.14}" stroke-linejoin="round" paint-order="stroke"` : '';
+  return `<text x="${f1(x)}" y="${f1(y)}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" opacity="${op}" ${st}>${esc(str)}</text>`;
+}
+function headline(t, a, b, lines, y = 260, size = 84) {
+  const op = win(t, a, b, .3); if (op <= 0) return '';
+  const dy = (1 - easeOut(prog(t, a, a + .4))) * 30;
+  let s = `<g opacity="${op}" transform="translate(0 ${f1(dy)})">`;
+  lines.forEach((l, i) => { s += txt(540, y + i * size * 1.25, l[0], size, { fill: l[1] || '#fff', stroke: BG }); });
+  return s + '</g>';
+}
+function caption(t, a, b, str) {
+  const op = win(t, a, b, .2); if (op <= 0) return '';
+  const ls = str.split('\n'), fs = 52, lh = 74;
+  const w = Math.min(1020, Math.max(...ls.map(tlen)) * fs + 90), h = ls.length * lh + 46;
+  const y0 = 1650 - h / 2, dy = (1 - easeOut(prog(t, a, a + .3))) * 24;
+  let s = `<g opacity="${op}" transform="translate(0 ${f1(dy)})"><rect x="${f1(540 - w / 2)}" y="${f1(y0)}" width="${f1(w)}" height="${h}" rx="30" fill="#000" opacity=".58"/>`;
+  ls.forEach((l, i) => { s += txt(540, y0 + 23 + lh * (i + .5) + fs * .36, l, fs, { weight: 700 }); });
+  return s + '</g>';
+}
+function pop(t, a, b, x, y, str, size, fill = YEL, rot = -8) {
+  const op = win(t, a, b, .12); if (op <= 0) return '';
+  const sc = back(prog(t, a, a + .25));
+  return `<g opacity="${op}" transform="translate(${x} ${y}) rotate(${rot}) scale(${f1(sc * 100) / 100})">${txt(0, 0, str, size, { fill, stroke: BG })}</g>`;
+}
+
+// ---------- the drop ----------
+function spine(s, o) {
+  const P1 = [230, -360], P2 = [-80, -720], u = 1 - s;
+  const fx = o.flip ? -1 : 1, x = fx * (2 * u * s * P1[0] + s * s * P2[0]), y = 2 * u * s * P1[1] + s * s * P2[1];
+  const c = Math.cos(o.rot || 0), sn = Math.sin(o.rot || 0);
+  return [o.x + (x * c - y * sn) * o.k, o.y + (x * sn + y * c) * o.k];
+}
+const halfW = (s, R) => R * Math.pow(1 - s, 1.8) + 2.4;
+function dropPath(o, s0 = 0, s1 = 1) {
+  const N = 90, L = [], Rr = [];
+  for (let i = 0; i <= N; i++) {
+    const s = lerp(s0, s1, i / N), p = spine(s, o);
+    const a = spine(Math.max(0, s - .003), o), b = spine(Math.min(1, s + .003), o);
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const w = halfW(s, o.R) * o.k;
+    L.push([p[0] - dy * w, p[1] + dx * w]); Rr.push([p[0] + dy * w, p[1] - dx * w]);
+  }
+  return 'M' + L.concat(Rr.reverse()).map(p => f1(p[0]) + ',' + f1(p[1])).join('L') + 'Z';
+}
+function normalAt(s, o) {
+  const a = spine(Math.max(0, s - .003), o), b = spine(Math.min(1, s + .003), o);
+  let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l];
+}
+const CRACKS = (() => { const r = rng(11), a = []; for (let i = 0; i < 420; i++) a.push({ s: Math.pow(r(), .8), off: r() * 2 - 1, ang: r() * Math.PI, len: 6 + r() * 22 }); return a; })();
+
+function drawDrop(o) {
+  const col = o.col || GLASS, id = 'g' + (o.id || 0), hc = spine(0, o), r = o.R * o.k;
+  let s = `<defs><radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${f1(hc[0] - r * .3)}" cy="${f1(hc[1] - r * .35)}" r="${f1(r * 2.3)}">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".28" stop-color="${col}"/><stop offset="1" stop-color="${mix(col, BG, .55)}"/></radialGradient></defs>`;
+  s += `<g opacity="${o.alpha ?? 1}">`;
+  if (o.halo) s += `<circle cx="${f1(hc[0])}" cy="${f1(hc[1])}" r="${f1(r * 2.4)}" fill="url(#halo)" opacity="${o.halo}"/>`;
+  s += `<path d="${dropPath(o)}" fill="url(#${id})"/><circle cx="${f1(hc[0])}" cy="${f1(hc[1])}" r="${f1(r)}" fill="url(#${id})"/>`;
+  s += `<ellipse cx="${f1(hc[0] - r * .38)}" cy="${f1(hc[1] - r * .4)}" rx="${f1(r * .24)}" ry="${f1(r * .13)}" fill="#fff" opacity=".75" transform="rotate(-35 ${f1(hc[0] - r * .38)} ${f1(hc[1] - r * .4)})"/>`;
+  if (o.front !== undefined && o.front < 1) {
+    const fr = clamp(o.front);
+    s += `<path d="${dropPath(o, fr, 1)}" fill="#e9fbff" opacity=".45"/>`;
+    if (fr <= 0.001) s += `<circle cx="${f1(hc[0])}" cy="${f1(hc[1])}" r="${f1(r)}" fill="#e9fbff" opacity=".45"/>`;
+    let ln = '';
+    for (const c of CRACKS) {
+      if (c.s < fr) continue;
+      const p = spine(c.s, o), nn = normalAt(c.s, o), w = halfW(c.s, o.R) * o.k * .9;
+      const x = p[0] + nn[0] * w * c.off, y = p[1] + nn[1] * w * c.off, L = c.len * o.k;
+      ln += `M${f1(x - Math.cos(c.ang) * L)},${f1(y - Math.sin(c.ang) * L)}L${f1(x + Math.cos(c.ang) * L)},${f1(y + Math.sin(c.ang) * L)}`;
+    }
+    s += `<path d="${ln}" stroke="#ffffff" stroke-width="2.2" opacity=".85" fill="none"/>`;
+    const fp = spine(fr, o);
+    s += `<circle cx="${f1(fp[0])}" cy="${f1(fp[1])}" r="${f1(34 * o.k + 10)}" fill="url(#spark)"/>`;
+  }
+  return s + '</g>';
+}
+const SHARD_CACHE = {};
+function shards(o, t0, t, seed = 3, count = 320) {
+  const te = t - t0; if (te < 0 || te > 2.2) return '';
+  if (!SHARD_CACHE[seed]) {
+    const r = rng(seed), a = [];
+    for (let i = 0; i < count; i++) {
+      const s = Math.pow(r(), 1.6), p = spine(s, o), nn = normalAt(s, o), off = r() * 2 - 1, w = halfW(s, o.R) * o.k;
+      const x = p[0] + nn[0] * w * off, y = p[1] + nn[1] * w * off;
+      const hc = spine(0, o); let dx = x - hc[0] + (r() - .5) * 60, dy = y - hc[1] + (r() - .5) * 60;
+      const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+      a.push({ x, y, dx, dy, v: 350 + r() * 1300, size: 3 + r() * 9, rot: r() * 6.28, spin: (r() - .5) * 14, c: r() < .3 ? '#ffffff' : GLASS });
+    }
+    SHARD_CACHE[seed] = a;
+  }
+  const al = clamp(1 - te / 2.0); let s = '';
+  const flash = clamp(1 - te / .25);
+  const hc = spine(0, o);
+  if (flash > 0) s += `<circle cx="${f1(hc[0])}" cy="${f1(hc[1])}" r="${f1(60 + te * 1400)}" fill="url(#spark)" opacity="${f1(flash)}"/>`;
+  for (const p of SHARD_CACHE[seed]) {
+    const d = p.v * (1 - Math.exp(-2.6 * te)) / 2.6;
+    const x = p.x + p.dx * d, y = p.y + p.dy * d + 260 * te * te, a = p.rot + p.spin * te, z = p.size;
+    const pts = [0, 2.1, 4.2].map(k => `${f1(x + Math.cos(a + k) * z)},${f1(y + Math.sin(a + k) * z)}`).join(' ');
+    s += `<polygon points="${pts}" fill="${p.c}" opacity="${f1(al)}"/>`;
+  }
+  return s;
+}
+function burst(x, y, t, h, color = YEL) {
+  const te = t - h; if (te < 0 || te > .3) return '';
+  const p = te / .3; let s = `<g opacity="${f1(1 - p)}" stroke="${color}" stroke-width="10" stroke-linecap="round">`;
+  for (let i = 0; i < 9; i++) {
+    const a = Math.PI + (i / 8) * Math.PI, r0 = 40 + p * 60, r1 = 90 + p * 130;
+    s += `<line x1="${f1(x + Math.cos(a) * r0)}" y1="${f1(y + Math.sin(a) * r0)}" x2="${f1(x + Math.cos(a) * r1)}" y2="${f1(y + Math.sin(a) * r1)}"/>`;
+  }
+  return s + '</g>';
+}
+function arrow(x1, y1, x2, y2, color, w = 10, op = 1) {
+  const a = Math.atan2(y2 - y1, x2 - x1), h = w * 2.6;
+  const bx = x2 - Math.cos(a) * h, by = y2 - Math.sin(a) * h;
+  const p1 = [bx + Math.cos(a + Math.PI / 2) * h * .6, by + Math.sin(a + Math.PI / 2) * h * .6];
+  const p2 = [bx + Math.cos(a - Math.PI / 2) * h * .6, by + Math.sin(a - Math.PI / 2) * h * .6];
+  return `<g opacity="${f1(op)}"><line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(bx)}" y2="${f1(by)}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/><polygon points="${f1(x2)},${f1(y2)} ${f1(p1[0])},${f1(p1[1])} ${f1(p2[0])},${f1(p2[1])}" fill="${color}"/></g>`;
+}
+
+// ---------- scenes ----------
+const HITS = [1.0, 2.0, 2.9];
+function hammerDeg(t) {
+  for (const h of HITS) {
+    if (t >= h - .4 && t < h) { const p = (t - (h - .4)) / .4; return 35 * (1 - p * p); }
+    if (t >= h && t < h + .5) return 35 * easeOut((t - h) / .5);
+  }
+  return 35;
+}
+function sceneA(t) { // 0 - 7.6 : hammer + tail snap
+  const o0 = { x: 470, y: 1250, k: 1, rot: -0.15, R: 120, id: 1, flip: true };
+  let shx = 0;
+  for (const h of HITS) { const d = t - h; if (d > 0 && d < .3) shx += Math.sin(d * 90) * 12 * (1 - d / .3); }
+  const o = { ...o0, x: o0.x + shx };
+  let s = '';
+  s += headline(t, 0.15, 4.2, [['망치로 내리쳐도'], ['안 깨지는 유리?', YEL]], 250, 86);
+  s += headline(t, 4.3, 7.5, [['그런데 꼬리를'], ['살짝 꺾으면?', YEL]], 250, 86);
+
+  const SNAP = 5.4, BOOM = 5.66;
+  if (t < BOOM) {
+    const front = t < SNAP ? 1 : 1 - easeIn(prog(t, SNAP, BOOM));
+    s += drawDrop({ ...o, front: t < SNAP ? undefined : front });
+  } else s += shards(o0, BOOM, t, 3);
+
+  // hammer
+  if (t < 4.6) {
+    const ex = easeIn(prog(t, 4.0, 4.6));
+    s += `<g opacity="${f1(1 - ex)}" transform="translate(${f1(1075 + ex * 500)} 1095) rotate(${f1(hammerDeg(t) + ex * 20)})">
+      <rect x="-530" y="-15" width="560" height="30" rx="12" fill="#a8703f"/>
+      <rect x="-602" y="-150" width="144" height="210" rx="16" fill="#9aa3b5" stroke="#5c6577" stroke-width="6"/>
+      <rect x="-590" y="-138" width="22" height="186" rx="8" fill="#ffffff" opacity=".35"/></g>`;
+  }
+  HITS.forEach((h, i) => { s += burst(545, 1155, t, h); s += pop(t, h, h + .55, i % 2 ? 250 : 700, 1060, i === 1 ? '쾅!' : '탕!', 96, '#ffffff', i % 2 ? -10 : 8); });
+  if (t > 3.2 && t < 4.3) {
+    const op = win(t, 3.2, 4.3, .15), sc = back(prog(t, 3.2, 3.45));
+    s += `<g opacity="${f1(op)}" transform="translate(760 1380) scale(${f1(sc * 100) / 100})"><circle r="70" fill="#2fbf71"/><path d="M-32,2 L-8,26 L34,-22" stroke="#fff" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    s += txt(760, 1500, '멀쩡!', 60, { fill: '#7dffb0', op, stroke: BG });
+  }
+  // fingers pinching tail
+  if (t > 4.5 && t < 6.0) {
+    const tip = spine(1, o0), cl = easeOut(prog(t, 4.6, 5.2)), out = easeIn(prog(t, 5.5, 6.0));
+    const gap = lerp(140, 26, cl) + out * 160, op = 1 - out;
+    s += `<g opacity="${f1(op)}"><rect x="${f1(tip[0] - gap - 70)}" y="${f1(tip[1] - 30)}" width="80" height="60" rx="30" fill="#f2c9a0"/>
+      <rect x="${f1(tip[0] + gap - 10)}" y="${f1(tip[1] - 30)}" width="80" height="60" rx="30" fill="#f2c9a0"/></g>`;
+  }
+  { const tp = spine(1, o0); s += pop(t, SNAP, SNAP + .5, tp[0] + 90, tp[1] + 10, '딱', 64, '#ffffff', 10); }
+  s += pop(t, BOOM + .02, BOOM + .9, 540, 1000, '펑!', 150, YEL, -6);
+
+  s += caption(t, 0.3, 3.95, '망치로 세게 쳐도 멀쩡한 유리 방울');
+  s += caption(t, 4.4, 5.6, '그런데 가느다란 꼬리 끝을\n살짝 꺾으면…');
+  s += caption(t, 5.75, 7.5, '펑! 순식간에 통째로 가루가 돼요');
+  return s;
+}
+function sceneB(t) { // 7.6 - 11.0 : title
+  const a = 7.6, sc = back(prog(t, a, a + .5)), bob = Math.sin((t - a) * 2.4) * 10;
+  let s = `<g transform="translate(540 ${f1(850 + bob)}) scale(${f1(sc * 100) / 100}) translate(-540 -850)">`;
+  s += drawDrop({ x: 520, y: 880, k: .5, rot: .12, R: 120, id: 2 }) + '</g>';
+  const op = easeOut(prog(t, a + .3, a + .8));
+  s += `<g opacity="${f1(op)}" filter="url(#glow)">${txt(540, 1110, '루퍼트의 눈물', 132, { fill: '#ffffff' })}</g>`;
+  s += txt(540, 1200, "Prince Rupert's Drop", 54, { fill: GLASS, weight: 600, op: easeOut(prog(t, a + .6, a + 1.0)) });
+  s += txt(540, 1290, '1660년대 영국 왕립학회도 연구한 유리', 42, { fill: '#a9b6c8', weight: 600, op: easeOut(prog(t, a + .9, a + 1.3)) });
+  s += caption(t, 7.9, 10.8, "이 유리의 이름은 '루퍼트의 눈물'");
+  return s;
+}
+const BUBBLES = (() => { const r = rng(5), a = []; for (let i = 0; i < 34; i++) a.push({ ts: 12.75 + r() * 1.9, dx: (r() - .5) * 70, r: 5 + r() * 10, v: 220 + r() * 220 }); return a; })();
+const SPLASH = (() => { const r = rng(9), a = []; for (let i = 0; i < 22; i++) { const ang = -Math.PI / 2 + (r() - .5) * 2.2; a.push({ vx: Math.cos(ang) * (250 + r() * 450), vy: Math.sin(ang) * (500 + r() * 600), r: 5 + r() * 9 }); } return a; })();
+function sceneC(t) { // 11.0 - 15.6 : how it's made
+  let s = headline(t, 11.05, 15.5, [['어떻게 만들까?']], 160, 76);
+  const SURF = 1050, Y0 = 481, DET = 12.0, HIT = DET + Math.sqrt(2 * (SURF - Y0) / 2600);
+  // tank
+  const wave = k => Array.from({ length: 37 }, (_, i) => { const x = 180 + i * 20; const d = t > HIT ? Math.exp(-(t - HIT) * 2.2) * 14 * Math.sin((x - 540) / 30 - (t - HIT) * 12) * Math.exp(-Math.abs(x - 540) / 260) : 0; return `${x},${f1(SURF + Math.sin(i * .5 + t * 3) * 4 + d)}`; }).join(' ');
+  s += `<polygon points="${wave()} 900,1470 180,1470" fill="#2a7bd1" opacity=".38"/>`;
+  s += `<polyline points="${wave()}" stroke="#9fd3ff" stroke-width="5" fill="none" opacity=".8"/>`;
+  // drop
+  let y, k = .3;
+  if (t < DET) { y = null; }
+  else if (t < HIT) y = Y0 + .5 * 2600 * Math.pow(t - DET, 2);
+  else y = SURF + 260 * easeOut((t - HIT) / .8);
+  const cool = prog(t, HIT + .1, 14.6), col = mix(HOT, GLASS, cool);
+  if (y !== null) {
+    if (t > HIT) for (const b of BUBBLES) { const te = t - b.ts; if (te < 0) continue; const by = y - 40 - te * b.v; if (by < SURF + 10) continue; s += `<circle cx="${f1(540 + b.dx + Math.sin(te * 9) * 6)}" cy="${f1(by)}" r="${f1(b.r)}" fill="none" stroke="#e8f6ff" stroke-width="3" opacity=".7"/>`; }
+    s += drawDrop({ x: 540, y, k, rot: .1, R: 120, id: 3, col, halo: 1 - cool });
+  } else {
+    const r = 36 * easeOut(prog(t, 11.3, 12.0));
+    s += `<circle cx="540" cy="${f1(445 + r * .9)}" r="${f1(r * 2.2)}" fill="url(#halo)"/><circle cx="540" cy="${f1(445 + r * .9)}" r="${f1(r)}" fill="${HOT}"/>`;
+  }
+  // splash
+  if (t > HIT && t < HIT + .8) { const te = t - HIT; for (const p of SPLASH) { const x = 540 + p.vx * te, yy = SURF + p.vy * te + 1800 * te * te; if (yy > SURF + 5) continue; s += `<circle cx="${f1(x)}" cy="${f1(yy)}" r="${f1(p.r)}" fill="#bfe6ff" opacity="${f1(1 - te / .8)}"/>`; } }
+  // tank walls + crucible
+  s += `<path d="M180,980 L180,1470 L900,1470 L900,980" stroke="#9fb3c8" stroke-width="8" fill="none" stroke-linejoin="round"/>`;
+  s += `<path d="M395,230 L685,230 L625,395 Q540,440 455,395 Z" fill="#4a5263" stroke="#7c8597" stroke-width="6"/>
+    <ellipse cx="540" cy="238" rx="138" ry="20" fill="${HOT}"/><ellipse cx="540" cy="238" rx="200" ry="50" fill="url(#halo)" opacity=".8"/>
+    <rect x="524" y="415" width="32" height="32" rx="6" fill="#5b6475"/>`;
+  s += txt(705, 330, '녹인 유리', 42, { anchor: 'start', fill: '#ffb27a', op: easeOut(prog(t, 11.3, 11.7)) });
+  s += txt(705, 380, '(약 1,000℃)', 36, { anchor: 'start', fill: '#ffb27a', weight: 600, op: easeOut(prog(t, 11.3, 11.7)) });
+  s += txt(870, 1440, '찬물', 44, { anchor: 'end', fill: '#bfe6ff', op: easeOut(prog(t, 11.5, 11.9)) });
+  if (cool > 0) s += txt(720, y + 10, cool < 1 ? '식는 중…' : '굳음!', 40, { anchor: 'start', fill: cool < 1 ? '#ffd6b5' : GLASS, op: clamp(cool * 3) });
+  s += caption(t, 11.2, 13.3, '녹인 유리를 찬물에 똑 떨어뜨리면');
+  s += caption(t, 13.4, 15.45, '겉부터 순식간에 식어서 굳어요');
+  return s;
+}
+function sceneD(t) { // 15.6 - 21.0 : cross section
+  const cx = 540, cy = 890, RO = 300, RI = 225;
+  let s = headline(t, 15.65, 20.9, [['왜 안 깨질까?']], 200, 80);
+  const sc = back(prog(t, 15.6, 16.1));
+  const shell = mix(HOT, GLASS, prog(t, 16.2, 17.0)), core = mix(HOT, DEEP, prog(t, 17.4, 18.6));
+  s += `<g transform="translate(${cx} ${cy}) scale(${f1(sc * 100) / 100})">`;
+  s += `<circle r="${RO * 1.25}" fill="url(#halo)" opacity="${f1(1 - prog(t, 16.2, 18.6))}"/>`;
+  s += `<circle r="${RO}" fill="${shell}"/><circle r="${RI}" fill="${core}"/>`;
+  s += `<circle r="${RO}" fill="none" stroke="#ffffff" stroke-width="4" opacity=".5"/><circle r="${RI}" fill="none" stroke="#ffffff" stroke-width="3" opacity=".35" stroke-dasharray="14 10"/>`;
+  // arrows
+  const aOp = prog(t, 18.0, 18.5), pulse = 1 + Math.sin(t * 8) * .04;
+  if (aOp > 0) {
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * Math.PI * 2 + .26, c = Math.cos(a), n = Math.sin(a);
+      s += arrow(c * 372 * pulse, n * 372 * pulse, c * 312, n * 312, YEL, 11, aOp);
+    }
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * Math.PI * 2 + Math.PI / 8, c = Math.cos(a), n = Math.sin(a);
+      s += arrow(c * 212, n * 212, c * 160 * pulse, n * 160 * pulse, '#ff9b6b', 9, aOp);
+    }
+  }
+  s += '</g>';
+  const l1 = win(t, 16.4, 18.85, .2), l2 = prog(t, 18.85, 19.1);
+  s += txt(540, 470, '겉: 먼저 식어서 굳음', 48, { fill: GLASS, op: l1, stroke: BG });
+  s += txt(540, 470, '겉: 압축 (꽉 눌림)', 50, { fill: YEL, op: l2, stroke: BG });
+  const c1 = win(t, 17.5, 18.85, .2);
+  s += txt(540, 878, '속: 늦게 식으며', 40, { op: c1, stroke: BG }) + txt(540, 930, '줄어듦', 40, { op: c1, stroke: BG });
+  s += txt(540, 905, '속: 인장 (당겨짐)', 40, { op: l2, stroke: BG });
+  // counter
+  const cOp = prog(t, 19.0, 19.3);
+  if (cOp > 0) {
+    const n = Math.round(700 * easeOut(prog(t, 19.1, 19.9)) / 10) * 10;
+    s += `<g opacity="${f1(cOp)}">` + txt(540, 1330, '표면을 누르는 힘', 40, { fill: '#a9b6c8', weight: 700 }) +
+      txt(540, 1432, `약 ${n} MPa`, 100, { fill: YEL, stroke: BG }) +
+      txt(540, 1494, '대기압의 약 7,000배', 38, { fill: '#ffffff', weight: 700, op: prog(t, 19.9, 20.2) }) + '</g>';
+  }
+  s += caption(t, 15.8, 18.75, '겉이 먼저 굳고, 속은 나중에 식으며\n줄어들어 겉을 안쪽으로 끌어당겨요');
+  s += caption(t, 18.9, 20.9, '그래서 표면이 강하게 눌려 있어\n금이 벌어지지 못해요');
+  return s;
+}
+function sceneE(t) { // 21.0 - 25.0 : why it explodes
+  const o = { x: 210, y: 930, k: .95, rot: 1.68, R: 120, id: 4 };
+  let s = headline(t, 21.05, 24.9, [['꼬리를 꺾으면'], ['왜 터질까?', YEL]], 240, 78);
+  const SNAP = 22.4, BOOM = 23.6;
+  if (t < BOOM) {
+    s += drawDrop({ ...o, front: t < SNAP ? undefined : 1 - prog(t, SNAP + .05, BOOM) });
+    // tension core
+    const cOp = win(t, 21.3, SNAP + .1, .3);
+    if (cOp > 0) {
+      let d = ''; for (let i = 0; i <= 40; i++) { const p = spine(i / 40 * .9, o); d += (i ? 'L' : 'M') + f1(p[0]) + ',' + f1(p[1]); }
+      s += `<path d="${d}" stroke="#ff9b6b" stroke-width="8" stroke-dasharray="16 12" fill="none" opacity="${f1(cOp)}"/>`;
+      s += txt(210, 1120, '당겨진 속', 40, { fill: '#ff9b6b', op: cOp, stroke: BG });
+    }
+    const tip = spine(1, o), tOp = win(t, 21.5, SNAP + .2, .2);
+    if (tOp > 0) {
+      s += `<circle cx="${f1(tip[0])}" cy="${f1(tip[1])}" r="${f1(34 + Math.sin(t * 10) * 6)}" fill="none" stroke="#ff5a5a" stroke-width="6" opacity="${f1(tOp)}"/>`;
+      s += txt(tip[0] - 20, tip[1] - 70, '가늘어서', 38, { fill: '#ff8a8a', op: tOp, stroke: BG }) + txt(tip[0] - 20, tip[1] - 25, '쉽게 부러짐', 38, { fill: '#ff8a8a', op: tOp, stroke: BG });
+    }
+  } else s += shards(o, BOOM, t, 8);
+  s += pop(t, SNAP, SNAP + .5, 900, 860, '딱!', 64, '#ffffff', 10);
+  const sm = win(t, SNAP + .05, BOOM + .1, .1);
+  if (sm > 0) s += `<g opacity="${f1(sm)}"><circle cx="760" cy="${f1(720 - 14)}" r="12" fill="#ff4d4d" opacity="${Math.sin(t * 12) > 0 ? 1 : .3}"/>${txt(785, 720, '슬로 모션', 38, { anchor: 'start', fill: '#ffb3b3', weight: 700 })}</g>`;
+  const pOp = prog(t, 22.6, 22.9);
+  if (pOp > 0) s += `<g opacity="${f1(pOp)}">` + txt(540, 1255, '균열이 퍼지는 속도', 40, { fill: '#a9b6c8', weight: 700 }) +
+    txt(540, 1365, '초속 약 1.5 km', 96, { fill: YEL, stroke: BG }) + txt(540, 1430, '시속으로 5,000km 이상', 38, { fill: '#ffffff', weight: 700, op: prog(t, 23.0, 23.3) }) + '</g>';
+  s += pop(t, BOOM + .02, BOOM + .8, 540, 980, '펑!', 140, YEL, -6);
+  s += caption(t, 21.1, 22.35, '꼬리는 가늘어서 쉽게 부러지는데');
+  s += caption(t, 22.45, 24.9, '금이 속까지 닿는 순간\n쌓여 있던 힘이 한꺼번에 풀려요');
+  return s;
+}
+function sceneF(t) { // 25.0 - 28.5 : tempered glass
+  let s = headline(t, 25.05, 28.6, [['이 원리, 어디에 쓰일까?']], 230, 70);
+  const sc = back(prog(t, 25.1, 25.6));
+  s += `<g transform="translate(540 820) scale(${f1(sc * 100) / 100})">
+    <rect x="-190" y="-360" width="380" height="720" rx="60" fill="#1c2333" stroke="#6b7a90" stroke-width="8"/>
+    <rect x="-166" y="-330" width="332" height="660" rx="40" fill="url(#screen)"/>
+    <path d="M-166,-120 L60,-330 L150,-330 L-166,-20 Z" fill="#ffffff" opacity=".12"/>
+    <rect x="-40" y="-318" width="80" height="16" rx="8" fill="#0b1220"/></g>`;
+  s += txt(540, 840, '강화유리', 58, { fill: '#ffffff', op: prog(t, 25.5, 25.8), stroke: BG });
+  // layer diagram
+  const lOp = prog(t, 25.8, 26.2);
+  if (lOp > 0) {
+    s += `<g opacity="${f1(lOp)}"><rect x="290" y="1235" width="500" height="34" rx="8" fill="${GLASS}"/><rect x="290" y="1269" width="500" height="92" fill="${DEEP}"/><rect x="290" y="1361" width="500" height="34" rx="8" fill="${GLASS}"/>`;
+    s += arrow(200, 1252, 282, 1252, YEL, 9) + arrow(880, 1252, 798, 1252, YEL, 9) + arrow(200, 1378, 282, 1378, YEL, 9) + arrow(880, 1378, 798, 1378, YEL, 9);
+    s += txt(540, 1328, '속: 인장', 36, { weight: 700 }) + txt(540, 1212, '겉: 압축', 34, { fill: YEL, weight: 700 }) + '</g>';
+  }
+  s += txt(540, 1478, '겉을 누르면, 유리는 강해진다', 56, { fill: YEL, op: prog(t, 27.0, 27.3), stroke: BG });
+  s += caption(t, 25.2, 28.6, '스마트폰·자동차 강화유리도\n같은 원리로 단단해져요');
+  return s;
+}
+
+const SCENES = [[0, 7.6, sceneA], [7.6, 11.0, sceneB], [11.0, 15.6, sceneC], [15.6, 21.0, sceneD], [21.0, 25.0, sceneE], [25.0, DUR, sceneF]];
+const DEFS = `<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#1a2944"/><stop offset="1" stop-color="${BG}"/></radialGradient>
+  <radialGradient id="halo"><stop offset="0" stop-color="#ff9a4a" stop-opacity=".75"/><stop offset="1" stop-color="#ff7a2f" stop-opacity="0"/></radialGradient>
+  <radialGradient id="spark"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset=".4" stop-color="#d9fbff" stop-opacity=".7"/><stop offset="1" stop-color="#8fe9e4" stop-opacity="0"/></radialGradient>
+  <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b5876"/><stop offset="1" stop-color="#4e4376"/></linearGradient>
+  <filter id="glow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>`;
+const DOTS = (() => { const r = rng(21); let d = ''; for (let i = 0; i < 70; i++) d += `<circle cx="${f1(r() * 1080)}" cy="${f1(r() * 1920)}" r="${f1(1 + r() * 2.2)}" fill="#ffffff" opacity="${f1(.04 + r() * .08)}"/>`; return d; })();
+
+function render(f) {
+  const t = f / FPS;
+  let s = DEFS + `<rect width="1080" height="1920" fill="url(#bg)"/>` + DOTS;
+  for (const [a, b, fn] of SCENES) {
+    if (t < a - .001 || t > b + .001) continue;
+    const op = (a === 0 ? 1 : clamp((t - a) / .3)) * clamp((b - t) / .3 + (b === DUR ? 1 : 0));
+    s += `<g opacity="${f1(op * 1000) / 1000}">${fn(t)}</g>`;
+  }
+  s += txt(1040, 80, '1분 물리', 30, { anchor: 'end', fill: '#ffffff', op: .35, weight: 700 });
+  document.getElementById('s').innerHTML = s;
+}
+render(0);
+</script>
+</body></html>
